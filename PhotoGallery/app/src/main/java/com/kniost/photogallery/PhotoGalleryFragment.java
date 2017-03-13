@@ -155,6 +155,12 @@ public class PhotoGalleryFragment extends Fragment {
                     .getDrawable(R.drawable.android_robot);
             holder.bindDrawable(placeholder);
             mThumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl());
+            for (int i = Math.max(0, position - 10);
+                    i < Math.min(mGalleryItems.size() - 1, position + 10);
+                    i ++ ) {
+                Log.i(TAG, "Preload position" + i);
+                mThumbnailDownloader.queuePreloadThumbnail(mGalleryItems.get(i).getUrl());
+            }
         }
 
         @Override
