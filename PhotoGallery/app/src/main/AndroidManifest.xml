@@ -23,12 +23,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity android:name=".PhotoPageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
+
         <service android:name=".PollService"/>
+
         <receiver android:name=".StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+
         <receiver android:name=".NotificationReceiver"
                   android:exported="false">
             <intent-filter
