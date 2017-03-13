@@ -48,6 +48,7 @@ public class CrimeFragment extends Fragment {
     private CheckBox mSolvedCheckBox;
     private Button mReportButton;
     private Button mSuspectButton;
+    private Button mCallSuspectButton;
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -177,7 +178,34 @@ public class CrimeFragment extends Fragment {
             mSuspectButton.setEnabled(false);
         }
 
+        mCallSuspectButton = (Button) v.findViewById(R.id.crime_call_suspect);
+        if (mCrime.getSuspect() != null) {
+            handleCallSuspectButton(mCrime.getPhoneNumber());
+        } else {
+            mCallSuspectButton.setText(getString(R.string.crime_call_need_suspect));
+            mCallSuspectButton.setEnabled(false);
+        }
+
+        mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri number = Uri.parse("tel:" + mCrime.getPhoneNumber());
+                Intent i = new Intent(Intent.ACTION_DIAL, number);
+                startActivity(i);
+            }
+        });
+
         return v;
+    }
+
+    private void handleCallSuspectButton(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            mCallSuspectButton.setText(getString(R.string.crime_call_no_phone_number));
+            mCallSuspectButton.setEnabled(false);
+        } else {
+            mCallSuspectButton.setText(getString(R.string.crime_call_suspect, phoneNumber));
+            mCallSuspectButton.setEnabled(true);
+        }
     }
 
     @Override
@@ -196,6 +224,7 @@ public class CrimeFragment extends Fragment {
             // Specify which fields you want your query to return
             // values for.
             String [] queryFields = new String[] {
+                    ContactsContract.Contacts._ID,
                     ContactsContract.Contacts.DISPLAY_NAME
             };
             // Perform your query - the contactUri is like a "where"
@@ -211,13 +240,43 @@ public class CrimeFragment extends Fragment {
                 // Pull out the first column of the first row of data -
                 // that is your suspect's name.
                 c.moveToFirst();
-                String suspect = c.getString(0);
+                String suspect = c.getString(
+                        c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                String suspectId = c.getString(
+                        c.getColumnIndex(ContactsContract.Contacts._ID));
+                String phoneNumber = getPhoneNumberById(suspectId);
                 mCrime.setSuspect(suspect);
+                mCrime.setPhoneNumber(phoneNumber);
                 mSuspectButton.setText(suspect);
+                handleCallSuspectButton(phoneNumber);
+
             } finally {
                 c.close();
             }
         }
+    }
+
+    private String getPhoneNumberById(String contactId) {
+        Uri phoneUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        Cursor c = getActivity().getContentResolver().query(
+                phoneUri,
+                new String[] { ContactsContract.CommonDataKinds.Phone.NUMBER },
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "= ? ",
+                new String[] { contactId },
+                null
+        );
+        String phoneNumber = null;
+        try {
+            if (c.getCount() == 0) {
+                return phoneNumber;
+            }
+
+            c.moveToFirst();
+            phoneNumber = c.getString(0);
+        } finally {
+            c.close();
+        }
+        return phoneNumber;
     }
 
     private void updateDate() {

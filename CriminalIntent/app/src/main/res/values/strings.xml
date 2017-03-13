@@ -12,6 +12,7 @@
     <string name="empty_crime_set">No crime. Click anywhere to add one.</string>
     <!--<string name="subtitle_format">%1$s crimes</string>-->
     <plurals name="subtitle_plural">
+        <item quantity="zero">no crime</item>
         <item quantity="one">%1$s crime</item>
         <item quantity="other">%1$s crimes</item>
     </plurals>
@@ -26,4 +27,7 @@
     <string name="crime_report_suspect">the suspect is %s</string>
     <string name="crime_report_subject">CriminalIntent Crime Report</string>
     <string name="send_report">Send crime report via</string>
+    <string name="crime_call_need_suspect">Choose a suspect first</string>
+    <string name="crime_call_suspect">Call %1$s</string>
+    <string name="crime_call_no_phone_number">No Phone Number</string>
 </resources>
