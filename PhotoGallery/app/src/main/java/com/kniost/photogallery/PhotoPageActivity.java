@@ -21,4 +21,15 @@ public class PhotoPageActivity extends SingleFragmentActivity {
     protected Fragment createFragment() {
         return PhotoPageFragment.newInstance(getIntent().getData());
     }
+
+    @Override
+    public void onBackPressed() {
+        PhotoPageFragment fragment = (PhotoPageFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_container);
+        if (fragment.getWebView().canGoBack()) {
+            fragment.getWebView().goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }
