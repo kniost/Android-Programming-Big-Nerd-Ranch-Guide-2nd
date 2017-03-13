@@ -53,7 +53,7 @@ public class ThumbnailDowloader<T> extends HandlerThread {
                 } else if (msg.what == MESSAGE_PRELOAD) {
                     String urlToPreload = (String) msg.obj;
                     handlePreload(urlToPreload);
-                    Log.i(TAG, "Preload URL: " + urlToPreload);
+//                    Log.i(TAG, "Preload URL: " + urlToPreload);
                 }
             }
         };

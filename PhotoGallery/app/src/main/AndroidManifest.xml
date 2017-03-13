@@ -2,8 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.kniost.photogallery">
 
+    <permission android:name="com.kniost.photogallery.PRIVATE"
+                android:protectionLevel="signature" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="com.kniost.photogallery.PRIVATE" />
 
     <application
         android:allowBackup="true"
@@ -19,6 +24,18 @@
             </intent-filter>
         </activity>
         <service android:name=".PollService"/>
+        <receiver android:name=".StartupReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".NotificationReceiver"
+                  android:exported="false">
+            <intent-filter
+                android:priority="-999">
+                <action android:name="com.kniost.photogallery.SHOW_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
