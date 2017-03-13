@@ -13,6 +13,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 /**
  * Created by kniost on 2016/10/26.
  */
@@ -51,8 +54,9 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMM d, y", Locale.US);
         mDateButton = (Button) v.findViewById(R.id.crime_date);
-        mDateButton.setText(mCrime.getDate().toString());
+        mDateButton.setText(sdf.format(mCrime.getDate()));
         mDateButton.setEnabled(false);
 
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.crime_solved);
