@@ -4,19 +4,7 @@
               android:layout_height="match_parent"
               android:orientation="vertical">
 
-    <TextView
-        style="?android:listSeparatorTextViewStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/crime_title_label"/>
-
-    <EditText
-        android:id="@+id/crime_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:hint="@string/crime_title_hint"/>
+    <include layout="@layout/view_camera_and_title"/>
 
     <TextView
         style="?android:listSeparatorTextViewStyle"

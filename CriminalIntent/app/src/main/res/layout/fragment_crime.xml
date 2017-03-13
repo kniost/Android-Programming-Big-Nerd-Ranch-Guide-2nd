@@ -3,29 +3,22 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical">
-<TextView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="@string/crime_title_label"
-    style="?android:listSeparatorTextViewStyle"/>
-    <EditText
-        android:id="@+id/crime_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:hint="@string/crime_title_hint"/>
+
+    <include layout="@layout/view_camera_and_title"/>
+
     <TextView
+        style="?android:listSeparatorTextViewStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/crime_details_label"
-        style="?android:listSeparatorTextViewStyle"/>
+        android:text="@string/crime_details_label"/>
+
     <Button
         android:id="@+id/crime_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"/>
+
     <CheckBox
         android:id="@+id/crime_solved"
         android:layout_width="match_parent"
@@ -33,6 +26,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:text="@string/crime_solved_label"/>
+
     <Button
         android:id="@+id/crime_suspect"
         android:layout_width="match_parent"
@@ -40,6 +34,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:text="@string/crime_suspect_text"/>
+
     <Button
         android:id="@+id/crime_report"
         android:layout_width="match_parent"
@@ -47,12 +42,13 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:text="@string/crime_report_text"/>
+
     <Button
         android:id="@+id/crime_call_suspect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        android:text="@string/crime_call_need_suspect"
-        android:enabled="false"/>
+        android:enabled="false"
+        android:text="@string/crime_call_need_suspect"/>
 </LinearLayout>
