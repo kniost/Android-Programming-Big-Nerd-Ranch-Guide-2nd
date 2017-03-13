@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,12 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
+    private PhotoAdapter mPhotoAdapter;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private FetchItemsTask mFetchItemsTask;
+    private int mNextPage = 1;
+
+    private final int MAX_PAGES = 10;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -33,7 +39,8 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute();
+        mFetchItemsTask = new FetchItemsTask();
+        mFetchItemsTask.execute(1);
     }
 
     @Nullable
@@ -50,7 +57,13 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setAdapter() {
         if (isAdded()) {
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            if (mPhotoAdapter == null) {
+                mPhotoAdapter = new PhotoAdapter(mItems);
+                mPhotoRecyclerView.setAdapter(mPhotoAdapter);
+                mPhotoRecyclerView.addOnScrollListener(onButtomListener);
+            } else {
+                mPhotoAdapter.addData(mItems);
+            }
         }
     }
 
@@ -92,12 +105,17 @@ public class PhotoGalleryFragment extends Fragment {
         public int getItemCount() {
             return mGalleryItems.size();
         }
+
+        public void addData(List<GalleryItem> newItems) {
+            mGalleryItems.addAll(newItems);
+            notifyDataSetChanged();
+        }
     }
 
-    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
         @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems();
+        protected List<GalleryItem> doInBackground(Integer... params) {
+            return new FlickrFetchr().fetchItems(params[0]);
         }
 
         @Override
@@ -106,4 +124,26 @@ public class PhotoGalleryFragment extends Fragment {
             setAdapter();
         }
     }
+
+    private RecyclerView.OnScrollListener onButtomListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+            int lastPosition = layoutManager.findLastVisibleItemPosition();
+            if (newState == RecyclerView.SCROLL_STATE_IDLE
+                    && lastPosition >= mPhotoAdapter.getItemCount() - 1) {
+                Toast.makeText(getActivity(), "waiting to load ……", Toast.LENGTH_SHORT).show();
+                if (mFetchItemsTask.getStatus() == AsyncTask.Status.FINISHED) {
+                    mNextPage++;
+                    if (mNextPage <= MAX_PAGES) {
+                        mFetchItemsTask = new FetchItemsTask();
+                        mFetchItemsTask.execute(mNextPage);
+                    } else {
+                        Toast.makeText(getActivity(), "This is the end!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    };
 }
