@@ -1,6 +1,7 @@
 package com.kniost.criminalintent;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -63,6 +64,15 @@ public class CrimeFragment extends Fragment {
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
     private ViewTreeObserver mPhotoObserver;
+    private Callbacks mCallbacks;
+    /**
+     * Required interface for hosting activities
+     */
+    public interface Callbacks {
+        void onCrimeUpdated(Crime crime);
+        void onCrimeDeleted(Crime crime);
+        void onCrimeAllDeleted(Crime crime);
+    }
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -71,6 +81,12 @@ public class CrimeFragment extends Fragment {
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbacks = (Callbacks) context;
     }
 
     @Override
@@ -91,6 +107,12 @@ public class CrimeFragment extends Fragment {
     }
 
     @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_crime_detail, menu);
@@ -101,7 +123,13 @@ public class CrimeFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.menu_item_delete_crime:
                 CrimeLab.get(getActivity()).deleteCrime(mCrime);
-                getActivity().finish();
+                if (CrimeLab.get(getActivity()).getCrimes().isEmpty()) {
+                    mCallbacks.onCrimeAllDeleted(mCrime);
+                } else {
+                    mCrime = CrimeLab.get(getActivity()).getCrimes().get(0);
+                    mCallbacks.onCrimeDeleted(mCrime);
+                    updateCrime();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -123,6 +151,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mCrime.setTitle(charSequence.toString());
+                updateCrime();
             }
 
             @Override
@@ -150,6 +179,7 @@ public class CrimeFragment extends Fragment {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 //Set the crime's solved property
                 mCrime.setSolved(b);
+                updateCrime();
             }
         });
 
@@ -240,7 +270,8 @@ public class CrimeFragment extends Fragment {
         });
 
         mPhotoObserver = mPhotoView.getViewTreeObserver();
-        mPhotoObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        mPhotoObserver.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 updatePhotoView(
@@ -273,6 +304,7 @@ public class CrimeFragment extends Fragment {
             Date date = (Date) data
                     .getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             mCrime.setDate(date);
+            updateCrime();
             updateDate();
         } else if (requestCode == REQUEST_CONTACT && data != null) {
             Uri contactUri = data.getData();
@@ -302,6 +334,7 @@ public class CrimeFragment extends Fragment {
                 String phoneNumber = getPhoneNumberById(suspectId);
                 mCrime.setSuspect(suspect);
                 mCrime.setPhoneNumber(phoneNumber);
+                updateCrime();
                 mSuspectButton.setText(suspect);
                 handleCallSuspectButton(phoneNumber);
 
@@ -309,6 +342,7 @@ public class CrimeFragment extends Fragment {
                 c.close();
             }
         } else if (requestCode == REQUEST_PHOTO) {
+            updateCrime();
             updatePhotoView(mPhotoView.getWidth(), mPhotoView.getHeight());
         }
     }
@@ -334,6 +368,11 @@ public class CrimeFragment extends Fragment {
             c.close();
         }
         return phoneNumber;
+    }
+
+    private void updateCrime() {
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        mCallbacks.onCrimeUpdated(mCrime);
     }
 
     private void updateDate() {
