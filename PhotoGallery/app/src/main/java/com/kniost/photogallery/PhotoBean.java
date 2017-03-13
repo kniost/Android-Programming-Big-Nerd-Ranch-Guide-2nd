@@ -10,8 +10,15 @@ import java.util.List;
 
 public class PhotoBean {
 
+    public static final String STATUS_OK = "ok"
+            , STATUS_FAILED = "fail";
+
     @SerializedName("photos")
     private PhotosInfo mPhotoInfo;
+    @SerializedName("stat")
+    private String mStatus;
+    @SerializedName("message")
+    private String mMessage;
 
     public class PhotosInfo {
         @SerializedName("photo")
@@ -32,5 +39,13 @@ public class PhotoBean {
 
     public void setPhotoInfo(PhotosInfo photoInfo) {
         mPhotoInfo = photoInfo;
+    }
+
+    public String getStatus() {
+        return mStatus;
+    }
+
+    public String getMessage() {
+        return mMessage;
     }
 }

@@ -87,6 +87,10 @@ public class FlickrFetchr {
     private void parseItems(List<GalleryItem> items, String jsonString)
             throws IOException, JsonSyntaxException{
         PhotoBean photoBean = (PhotoBean) new Gson().fromJson(jsonString, PhotoBean.class);
-        items.addAll(photoBean.getPhotoInfo().getPhoto());
+        if (photoBean.getStatus().equals(PhotoBean.STATUS_OK)) {
+            items.addAll(photoBean.getPhotoInfo().getPhoto());
+        } else {
+            Log.e(TAG, "parseItems error: " + photoBean.getMessage());
+        }
     }
 }
