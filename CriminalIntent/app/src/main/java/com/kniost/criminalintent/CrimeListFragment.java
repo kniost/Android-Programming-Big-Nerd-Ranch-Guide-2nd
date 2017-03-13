@@ -31,6 +31,7 @@ public class CrimeListFragment extends Fragment {
 
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private TextView mCrimeSetEmptyTextView;
     private SimpleDateFormat mSDF;
     private boolean mSubtitleVisible;
     //private int positionClicked; //Used in challenge of chapter 10
@@ -49,6 +50,19 @@ public class CrimeListFragment extends Fragment {
 
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        mCrimeSetEmptyTextView = (TextView) view.findViewById(R.id.crime_set_empty_text_view);
+        mCrimeSetEmptyTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity
+                        .newIntent(getActivity(), crime.getId());
+                startActivity(intent);
+            }
+        });
+
         mSDF = new SimpleDateFormat("EEEE, MMM d, y", Locale.US);
 
         if (savedInstanceState != null) {
@@ -107,8 +121,8 @@ public class CrimeListFragment extends Fragment {
 
     private void updateSubtitle() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
-        int crimeCount = crimeLab.getCrimes().size();
-        String subtitle = getString(R.string.subtitle_format, crimeCount);
+        int crimeSize = crimeLab.getCrimes().size();
+        String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural, crimeSize, crimeSize);
 
         if (!mSubtitleVisible) {
             subtitle = null;
@@ -122,11 +136,18 @@ public class CrimeListFragment extends Fragment {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
-        if (mAdapter == null) {
-            mAdapter = new CrimeAdapter(crimes);
-            mCrimeRecyclerView.setAdapter(mAdapter);
+        if (crimes.size() > 0) {
+            mCrimeSetEmptyTextView.setVisibility(View.GONE);
+            mCrimeRecyclerView.setVisibility(View.VISIBLE);
+            if (mAdapter == null) {
+                mAdapter = new CrimeAdapter(crimes);
+                mCrimeRecyclerView.setAdapter(mAdapter);
+            } else {
+                mAdapter.notifyDataSetChanged();
+            }
         } else {
-            mAdapter.notifyDataSetChanged();
+            mCrimeSetEmptyTextView.setVisibility(View.VISIBLE);
+            mCrimeRecyclerView.setVisibility(View.GONE);
         }
 
         updateSubtitle();
