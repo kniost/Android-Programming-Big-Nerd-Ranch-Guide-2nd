@@ -1,5 +1,6 @@
 package com.kniost.photogallery;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -10,11 +11,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -37,7 +43,7 @@ public class PhotoGalleryFragment extends Fragment {
     private FetchItemsTask mFetchItemsTask;
     private int mNextPage = 1, mLastPosition;
 
-    private final int MAX_PAGES = 10;
+    private final int MAX_PAGES = 3;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -47,8 +53,8 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mFetchItemsTask = new FetchItemsTask();
-        mFetchItemsTask.execute(1);
+        setHasOptionsMenu(true);
+        updateItems(1);
 
         Handler responseHandler = new Handler();
         mThumbnailDownloader = new ThumbnailDowloader<>(responseHandler);
@@ -106,9 +112,73 @@ public class PhotoGalleryFragment extends Fragment {
         Log.i(TAG, "Background thread destroyed");
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_photo_gallery, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "QueryTextSubmit: " + query);
+                QueryPreferences.setStoredQuery(getActivity(), query);
+                mNextPage = 1;
+                updateItems(mNextPage);
+                if (searchView != null) {
+                    // 得到输入管理对象
+                    InputMethodManager imm = (InputMethodManager) getActivity()
+                            .getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        // 这将让键盘在所有的情况下都被隐藏，但是一般我们在点击搜索按钮后，输入法都会乖乖的自动隐藏的。
+                        imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0); // 输入法如果是显示状态，那么就隐藏输入法
+                    }
+                    searchView.onActionViewCollapsed(); // 不获取焦点
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG, "QueryTextChange: " + newText);
+                return false;
+            }
+        });
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String query = QueryPreferences.getStoredQuery(getActivity());
+                searchView.setQuery(query, false);
+            }
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                mThumbnailDownloader.clearQueue();
+                mNextPage = 1;
+                updateItems(mNextPage);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void updateItems(int page) {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        mFetchItemsTask = new FetchItemsTask(query);
+        mFetchItemsTask.execute(page);
+    }
+
     private void setAdapter() {
         if (isAdded()) {
-            if (mPhotoAdapter == null) {
+            if (mNextPage == 1) {
                 mPhotoAdapter = new PhotoAdapter(mItems);
                 mPhotoRecyclerView.setAdapter(mPhotoAdapter);
                 mPhotoRecyclerView.addOnScrollListener(onButtomListener);
@@ -158,7 +228,7 @@ public class PhotoGalleryFragment extends Fragment {
             for (int i = Math.max(0, position - 10);
                     i < Math.min(mGalleryItems.size() - 1, position + 10);
                     i ++ ) {
-                Log.i(TAG, "Preload position" + i);
+//                Log.i(TAG, "Preload position" + i);
                 mThumbnailDownloader.queuePreloadThumbnail(mGalleryItems.get(i).getUrl());
             }
         }
@@ -175,9 +245,20 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     private class FetchItemsTask extends AsyncTask<Integer, Void, List<GalleryItem>> {
+        private String mQuery;
+
+        public FetchItemsTask(String query) {
+            mQuery = query;
+        }
+
         @Override
         protected List<GalleryItem> doInBackground(Integer... params) {
-            return new FlickrFetchr().fetchItems(params[0]);
+
+            if (mQuery == null) {
+                return new FlickrFetchr().fetchRecentPhotos(params[0]);
+            } else {
+                return new FlickrFetchr().searchPhotos(mQuery, params[0]);
+            }
         }
 
         @Override
@@ -202,8 +283,7 @@ public class PhotoGalleryFragment extends Fragment {
                     mNextPage++;
                     if (mNextPage <= MAX_PAGES) {
                         Toast.makeText(getActivity(), "waiting to load ……", Toast.LENGTH_SHORT).show();
-                        mFetchItemsTask = new FetchItemsTask();
-                        mFetchItemsTask.execute(mNextPage);
+                        updateItems(mNextPage);
                     } else {
                         Toast.makeText(getActivity(), "This is the end!", Toast.LENGTH_SHORT).show();
                     }
