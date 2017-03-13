@@ -5,10 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +17,7 @@ import java.util.UUID;
  * Created by kniost on 16/11/17.
  */
 
-public class CrimePagerActivity extends FragmentActivity {
+public class CrimePagerActivity extends AppCompatActivity {
 
     private static final String EXTRA_CRIME_ID =
             "com.kniost.criminalintent.crime_id";
