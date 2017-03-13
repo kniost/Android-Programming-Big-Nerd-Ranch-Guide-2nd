@@ -15,6 +15,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final String EXTRA_IS_CHEATER = "extra_is_cheater";
     private static final int REQUST_CODE_CHEAT = 0;
 
     //对于基础的应用来说,一个组件首先在 layout 文件中被声明
@@ -128,6 +129,7 @@ public class QuizActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mIsCheater = savedInstanceState.getBoolean(EXTRA_IS_CHEATER, false);
         }
 
         updateQuestion();
@@ -152,6 +154,7 @@ public class QuizActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         Log.i(TAG, "onSaveInstanceState");
         outState.putInt(KEY_INDEX, mCurrentIndex);
+        outState.putBoolean(EXTRA_IS_CHEATER, mIsCheater);
     }
 
     @Override

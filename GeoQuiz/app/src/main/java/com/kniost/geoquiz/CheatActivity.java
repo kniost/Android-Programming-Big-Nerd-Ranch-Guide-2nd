@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,6 +16,7 @@ public class CheatActivity extends AppCompatActivity {
     private static final String EXTRA_ANSWER_SHOWN =
             "com.kniost.geoquiz.answer_shown";
     private boolean mAnswerIsTrue;
+    private boolean mIsAnswerShown = false;
 
     private TextView mAnswerTextView;
     private Button mShowAnswer;
@@ -47,9 +49,21 @@ public class CheatActivity extends AppCompatActivity {
                 } else {
                     mAnswerTextView.setText(R.string.false_button);
                 }
+                mIsAnswerShown = true;
                 setAnswerShownResult(true);
             }
         });
+
+        if (savedInstanceState != null) {
+            mIsAnswerShown = savedInstanceState.getBoolean(EXTRA_ANSWER_SHOWN, false);
+            setAnswerShownResult(mIsAnswerShown);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(EXTRA_ANSWER_SHOWN, mIsAnswerShown);
     }
 
     private void setAnswerShownResult(boolean isAnswerShown) {
