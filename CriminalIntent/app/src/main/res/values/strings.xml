@@ -30,4 +30,5 @@
     <string name="crime_call_need_suspect">Choose a suspect first</string>
     <string name="crime_call_suspect">Call %1$s</string>
     <string name="crime_call_no_phone_number">No Phone Number</string>
+    <string name="glance_picture_title">Picture Detail</string>
 </resources>
