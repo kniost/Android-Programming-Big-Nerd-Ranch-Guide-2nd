@@ -59,7 +59,10 @@ public class BoxDrawingView extends View {
             float top = Math.min(box.getOrigin().y, box.getCurrent().y);
             float bottom = Math.max(box.getOrigin().y, box.getCurrent().y);
 
+            canvas.save();
+            canvas.rotate(box.getRotatedAngle(), box.getCenter().x, box.getCenter().y);
             canvas.drawRect(left, top, right, bottom, mBoxPaint);
+            canvas.restore();
         }
     }
 
@@ -68,17 +71,36 @@ public class BoxDrawingView extends View {
         PointF current = new PointF(event.getX(), event.getY());
         String action = "";
 
-        switch (event.getAction()) {
+        switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 action = "ACTION_DOWN";
                 // Reset drawing state
                 mCurrentBox = new Box(current);
                 mBoxen.add(mCurrentBox);
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                action = "POINTER_DOWN";
+                if (event.getPointerCount() == 2) {
+                    float angle = (float) (Math.atan((event.getY(1) - event.getY(0)) /
+                        (event.getX(1) - event.getX(0))) * 180 / Math.PI);
+                    mCurrentBox.setOriginAngle(angle);
+                }
+                break;
+
             case MotionEvent.ACTION_MOVE:
                 action = "ACTION_MOVE";
                 if (mCurrentBox != null) {
-                    mCurrentBox.setCurrent(current);
+                    if (event.getPointerCount() == 1 && mCurrentBox.getRotatedAngle() == 0) {
+                        mCurrentBox.setCurrent(current);
+                    }
+                    if (event.getPointerCount() == 2) {
+                        float angle = (float) (Math.atan((event.getY(1) - event.getY(0)) /
+                                (event.getX(1) - event.getX(0))) * 180 / Math.PI);
+                        Log.i(TAG, "onTouchEvent: angle:" + (angle - mCurrentBox.getOriginAngle()));
+                        mCurrentBox.setRotatedAngle(mCurrentBox.getRotatedAngle() + angle
+                                - mCurrentBox.getOriginAngle());
+                        mCurrentBox.setOriginAngle(angle);
+                    }
                     invalidate();
                 }
                 break;
@@ -91,9 +113,9 @@ public class BoxDrawingView extends View {
                 mCurrentBox = null;
                 break;
         }
-
-        Log.i(TAG, action + " at x=" + current.x +
-                ", y=" + current.y);
+//
+//        Log.i(TAG, action + " at x=" + current.x +
+//                ", y=" + current.y);
 
         return true;
     }
