@@ -25,6 +25,7 @@ public class ThumbnailDowloader<T> extends HandlerThread {
     private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler;
     private ThumbnailDowloadListener<T> mThumbnailDownloadListener;
+    private LruCache<String, Bitmap> mCache;
 
     public interface ThumbnailDowloadListener<T> {
         void onThumbnailDownloaded(T target, Bitmap thumbnail);
@@ -51,6 +52,8 @@ public class ThumbnailDowloader<T> extends HandlerThread {
                 }
             }
         };
+        int maxCacheSize = 4 * 1024 * 1024; // 4MiB
+        mCache = new LruCache<>(maxCacheSize);
     }
 
     @Override
@@ -83,10 +86,18 @@ public class ThumbnailDowloader<T> extends HandlerThread {
                 return;
             }
 
-            byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
-            final Bitmap bitmap = BitmapFactory
-                    .decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
-            Log.i(TAG, "Bitmap created");
+            final Bitmap bitmap;
+            if (mCache.get(url) == null) {
+                byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
+                bitmap = BitmapFactory
+                        .decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
+                Log.i(TAG, "Bitmap created");
+
+                mCache.put(url, bitmap);
+            } else {
+                bitmap = mCache.get(url);
+                Log.i(TAG, "Bitmap from cache");
+            }
 
             mResponseHandler.post(new Runnable() {
                 @Override
